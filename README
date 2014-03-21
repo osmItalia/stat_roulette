@@ -1,0 +1,44 @@
+by Sbiribizio
+
+Directory in cui sono presenti i file per generare le entry per MapRoulette 
+a partire dai dati italiani in formato .osm
+
+
+# INSTALLAZIONE
+
+per funzionare bisogna aver gia' installato il perl
+in aggiunta sono stati installati i seguenti oggetti
+
+tramite apt-get :
+ - libdbd-sqlite3-perl
+ - sqlite 3
+
+tramite CPAN:
+ - modulo Array::Utils
+ - modulo Compress::Bzip2
+
+copia a mano:
+ - in /usr/lib/perl5 creata directory OSM per contenere
+   le librerie perl osm
+
+
+# LE SOTTODIRECTORY
+
+i dati raccolti o ealborati vengono raccolti in diverse sottodirectory
+
+- data : contiene i file <regione>.osm.bz2 scaricati e successivamente
+	 decompressi in regione.osm
+- db   : contiene i file di database <regione>,sqlite ottenuti dall'import
+	 del file <regione>.osm
+- tasks: contiene i file frutto dell'elaborazione degli script in Perl
+
+/tmp contiene dei file temporanei in formato testo per procedere all'import
+     bulk di dati in sqlite
+
+/var/domini/<nomedominio>/...... conterra' le sottodirectory con i file HTML (checking purposes) 
+
+in tools sono presenti gli script di utilita'
+in etc i file di configurazione necessari per alcuni test
+
+
+

@@ -1,0 +1,22 @@
+<XML>
+  <k="mode" v="X">
+  <k="dist" v="3">
+  <k="check" v="waterway:river">
+  <k="check" v="waterway:riverbank">
+  <k="check" v="waterway:canal">
+  <k="check" v="waterway:stream">
+  <k="check" v="waterway:drain">
+  <k="against" v="highway:motorway">
+  <k="against" v="highway:motorway_link">
+  <k="against" v="highway:trunk">
+  <k="against" v="highway:trunk_link">
+  <k="against" v="highway:primary">
+  <k="against" v="highway:primary_link">
+  <k="against" v="highway:secondary">
+  <k="against" v="highway:tertiary">
+  <k="against" v="highway:unclassified">
+  <k="against" v="highway:road">
+  <k="against" v="highway:residential">
+  <k="against" v="junction:roundabout">
+</XML>
+
