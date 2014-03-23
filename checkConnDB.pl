@@ -64,7 +64,7 @@ use strict ;
 use warnings ;
 
 use OSM::osm ;
-use OSM::osmDB ;
+use OSM::osmDB_SQLite ;
 use File::stat;
 use Time::localtime;
 require 'osm_sqlite_functions.pl'

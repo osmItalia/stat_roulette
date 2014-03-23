@@ -82,7 +82,6 @@ my $usage = $program . " def.xml file.sqlite out.htm " ;
 my $version = "3.1" ;
 my $mode = "N" ; #mode Normal
 
-my $gpxFileName = "../../web/osm/qa/bugs/OpenStreetBugsOpen.gpx" ;
 my $bugsMaxDist = 0.05 ; # in km
 my $bugsDownDist = 0.02 ; # in deg
 #my $minLength = 100 ; # min length of way to be considered in result list (in meters)
@@ -244,11 +243,7 @@ foreach $tag (@check) {
        		         # check tags ONLY ONCE
        		         foreach $tag1 (@wayTags) {
        	                 if ($tag1->[0] eq 'layer') { $layerTemp =$tag1->[1] ; }
-       	                 if ( ($tag1->[0] eq 'oneway') ) {
-       	                         $onewayTemp = 1 ;
-       	                 	}
-
-			}
+				}
 			push @checkWays, $wayId ; 
 			$checkWayCount++ ;
 			$layer{$wayId} = $layerTemp ;
@@ -295,11 +290,7 @@ foreach $tag (@against) {
        		         # check tags ONLY ONCE
        		         foreach $tag1 (@wayTags) {
        	                 if ($tag1->[0] eq 'layer') { $layerTemp =$tag1->[1] ; }
-       	                 if ( ($tag1->[0] eq 'oneway') ) {
-       	                         $onewayTemp = 1 ;
        	                 	}
-
-			}
        		        push @againstWays, $wayId ;
 			$againstWayCount++ ;
    	                $layer{$wayId} = $layerTemp ;
@@ -365,7 +356,8 @@ print "check for crossings...\n" ;
 $progress = 0 ;
 $timeA = time() ;
 
-push @againstWays, @checkWays ;
+#push @againstWays, @checkWays ; #why?? Perche'??
+
 my $total = scalar (@againstWays) ;
 
 $potential = $total * scalar (@checkWays) ;
@@ -449,7 +441,6 @@ print $html "<p>Mode ", $mode, "</p>\n" ;
 print $html "<H2>Statistics</H2>\n" ;
 print $html "<p><br>\n" ;
 print $html "number ways total: $wayCount<br>\n" ;
-print $html "number invalid ways (1 node only): $invalidWays<br>\n" ;
 print $html "number check ways: $checkWayCount<br>\n" ;
 print $html "number against ways: $againstWayCount</p>\n" ;
 
@@ -468,8 +459,6 @@ print $html "<th>WayId1</th>\n" ;
 print $html "<th>WayId2</th>\n" ;
 print $html "<th>Links</th>\n" ;
 print $html "<th>JOSM</th>\n" ;
-print $html "<th>Pic</th>\n" ;
-print $html "<th>Bugs found</th>\n" ;
 print $html "</tr>\n" ;
 $i = 0 ;
 
@@ -496,24 +485,14 @@ foreach my $s (@sorted) {
 	# HTML
 	print $html "<tr>\n" ;
 	print $html "<td>", $i , "</td>\n" ;
-	print $html "<td>", historyLink ("way", $id1) , " (oneway=$oneway{$id1})</td>\n" ;
-	print $html "<td>", historyLink ("way", $id2) , " (oneway=$oneway{$id2})</td>\n" ;
-	print $html "<td>", osmLink ($x, $y, 16) , "<br>\n" ;
-	print $html mapCompareLink ($x, $y, 16) , "</td>\n" ;
-	print $html "<td>", josmLinkSelectWays ($x, $y, 0.01, $id1, $id2), "</td>\n" ;
-	print $html "<td>", picLinkOsmarender ($x, $y, 16), "</td>\n" ;
-	if ($mode eq "B") {
-		print "get bugs for line $i...\n" ;
-		print $html "<td><h3>Old OSB</h3>", getBugs ($x, $y, $bugsDownDist, $bugsMaxDist), "<br>\n" ;
-		print $html "<h3>NEW OSB</h3>", getGPXWaypoints ($x, $y, $bugsMaxDist), "</td>\n"
-	}
-	else {
-		print $html "<td>bugs not enabled</td>\n" ;
-	}
+	print $html "<td>", historyLink ("way", $id1) , "</td>\n" ;
+	print $html "<td>", historyLink ("way", $id2) , "</td>\n" ;
+	print $html "<td>", osmLink ($x, $y, 16) , "</td>\n" ;
+	#Sabas improved
+#	print $html "<td>", josmLinkSelectWays ($x, $y, 0.01, $id1, $id2), "</td>\n" ;
+	print $html "<td>", josmLinkSelectWays ($x, $y, 0.0001, $id1, $id2), "</td>\n" ;
 	print $html "</tr>\n" ;
 
-	# GPX
-	my $text = "ChkCross - " . $id1 . "/" . $id2 . " level way crossing without common node" ;
 }
 
 print $html "</table>\n" ;
