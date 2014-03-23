@@ -41,6 +41,7 @@ use OSM::osm 4.9 ;
 use OSM::osmDB_SQLite ;
 use Math::Trig ;
 use Array::Utils qw(:all);
+use POSIX;
 
 my @areas = qw ( leisure:playground leisure:pitch );
 
@@ -171,6 +172,7 @@ foreach $tag2 (@areas) {
 			
 			# computo l'area
 			my $area = 0;
+
 			my $maxnodes = $j =  (scalar  @wayNodes) -1 ;
 			for ($i=0; $i < $maxnodes; $i++) {
 				my $id_i =  $wayNodes[$i];
@@ -179,18 +181,24 @@ foreach $tag2 (@areas) {
                		        $lat{$id_i} = $aRef4->{$id_i};
               		        $lon{$id_j} = $aRef3->{$id_j};
                		        $lat{$id_j} = $aRef4->{$id_j};
-				$area = $area + haversine ($lat{$id_i},  $lon{$id_i}, $lat{$id_j},  $lon{$id_i}) *  haversine ( $lat{$id_i}, $lon{$id_i},  $lat{$id_i}, $lon{$id_j}) ;
+				# alcuni nodi non hanno coordinate
+				# se li trovo, saltoil computo e azzero
+				if ( $lon{$id_i} &&  $lat{$id_i} && $lon{$id_j} &&  $lat{$id_j}) {
+					$area = $area + haversine ($lat{$id_i},  $lon{$id_i}, $lat{$id_j},  $lon{$id_i}) *  haversine ( $lat{$id_i}, $lon{$id_i},  $lat{$id_i}, $lon{$id_j}) ;
+					}
+				else { $area = -1; }
+
 				$j = $i;
 				}
 			$area = $area / 2;
 
 			if ($area > $maxDimension) {
-print "Big Area: $area mq\n";
+print "Big Area: " . floor($area) ." mq\n";
 				push @bigger, $wayId;
 				@{$biggerWayTags{$wayId}} = @wayTags ;
 				$wayStart{$wayId} = $wayNodes[0];
 				$biggerAreaCount ++ ;
-				$areaDim{$wayId} = $area;
+				$areaDim{$wayId} = floor($area);
 				}
 			}
 		}
