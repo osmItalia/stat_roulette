@@ -78,7 +78,7 @@ use Time::localtime;
 my $olc = 0 ;
 
 my $program = "checkCrossDB.pl" ;
-my $usage = $program . " def.xml file.sqlite out.htm " ;
+my $usage = $program . " def.xml file.sqlite out.htm out.txt" ;
 my $version = "3.1" ;
 my $mode = "N" ; #mode Normal
 
@@ -86,13 +86,12 @@ my $bugsMaxDist = 0.05 ; # in km
 my $bugsDownDist = 0.02 ; # in deg
 #my $minLength = 100 ; # min length of way to be considered in result list (in meters)
 
-my (%gpxLon, %gpxLat, %gpxId, %gpxClosed, %gpxDesc) ;
 
 my $qt ;
 
 my $wayId ; my $wayId1 ; my $wayId2 ;
 my $wayUser ; my @wayNodes ; my @wayTags ;
-my $nodeId ; my $nodeId2 ;
+my $nodeId ; 
 my $nodeUser ; my $nodeLat ; my $nodeLon ; my @nodeTags ;
 my $aRef1 ; my $aRef2 ; my $aRef3 ; my $aRef4 ;
 my $wayCount = 0 ;
@@ -117,7 +116,8 @@ my $checksDone ;
 
 my $html ;
 my $def ;
-my $gpx ;
+my $txt ;
+my $txtName ;
 my $htmlName ;
 my $defName ;
 my $dbName ;
@@ -153,6 +153,12 @@ if (!$dbName)
 
 $htmlName = shift||'';
 if (!$htmlName)
+{
+	die (print $usage, "\n");
+}
+
+$txtName = shift||'';
+if (!$txtName)
 {
 	die (print $usage, "\n");
 }
@@ -368,8 +374,8 @@ print "\nTotal ways to be checked = $total;  Potential crossing to be found = $p
 foreach $wayId1 (@againstWays) {
 	$progress++ ;
 	if ( ($progress % 100) == 0 ) {
-	print "--- $progress ways reached\n";	#printProgress ($program, $osmName, $timeA, $total, $progress) ;
-	}
+		print "--- $progress ways reached\n";	
+		}
 
 	# create temp array according to hash
 
@@ -431,7 +437,7 @@ $time1 = time () ;
 print "\nwrite HTML tables and GPX file, get bugs if specified...\n" ;
 
 open ($html, ">", $htmlName) || die ("Can't open html output file") ;
-
+open ($txt,  ">", $txtName) || die ("Can't open txt  output file") ;
 
 printHTMLiFrameHeader ($html, "Crossings Check by Gary68") ;
 
@@ -480,6 +486,8 @@ foreach my $s (@sorted) {
 
 	my ($x, $y, $id1, $id2) = @{$crossingsHash{$key}} ;
 
+	# TXT
+	print $txt "XING_"."$x"."_"."$y\n";
 
 	$i++ ;
 	# HTML
@@ -507,9 +515,14 @@ print $html "<p>", stringTimeSpent ($time1-$time0), "</p>\n" ;
 printHTMLFoot ($html) ;
 
 close ($html) ;
+close ($txt) ;
 
 
 print "\n$program finished after ", stringTimeSpent ($time1-$time0), "\n\n" ;
+
+
+
+###### -------------------------------- functions -------------------------
 
 
 sub getArea {

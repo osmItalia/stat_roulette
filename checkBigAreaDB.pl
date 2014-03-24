@@ -292,7 +292,7 @@ close ($html) ;
 
 open ($txt, ">", $txtName) || die ("Can't open txt output file") ;
 foreach $wayId (@bigger) {
-        print $txt "ARE_$wayId\n";
+        print $txt "BIG_$wayId\n";
         }
 
 close ($txt) ;

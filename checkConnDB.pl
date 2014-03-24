@@ -67,17 +67,16 @@ use OSM::osm ;
 use OSM::osmDB_SQLite ;
 use File::stat;
 use Time::localtime;
-require 'osm_sqlite_functions.pl'
 
-my $program = "checkconn.pl" ;
-my $usage = $program . " def.xml file.osm out.htm out.gpx" ;
+my $program = "checkConnDB.pl" ;
+my $usage = $program . " def.xml file.osm out.htm out.txt" ;
 my $version = "4.2" ;
 
 my $wayId ; my $wayId2 ;
 my $wayUser ; my @wayNodes ; my @wayTags ;
 my $nodeId ; my $nodeId2 ;
 my $nodeUser ; my $nodeLat ; my $nodeLon ; my @nodeTags ;
-my $aRef1 ; my $aRef2 ;
+my $aRef1 ; my $aRef2 ; my $aRef3 ; my $aRef4 ;
 my $wayCount = 0 ;
 my $againstCount = 0 ;
 my $checkWayCount = 0 ;
@@ -101,7 +100,7 @@ my $gpx ;
 my $osmName ;
 my $htmlName ;
 my $defName ;
-my $gpxName ;
+my $txtName ;
 
 my @wayStat = () ; # 0= fully connected; 3= unconnected; 2= end unconnected; 1= start unconnected
 my @cat1 ; my %cat1hash ;
@@ -117,9 +116,6 @@ my @neededNodes ;
 my %lon ; my %lat ;
 my %wayStart ; my %wayEnd ; my %wayStat ;
 
-my $APIcount = 0 ;
-my $APIerrors = 0 ;
-my $APIrejections = 0 ;
 
 ###############
 # get parameter
@@ -130,8 +126,8 @@ if (!$defName)
 	die (print $usage, "\n");
 }
 
-$osmName = shift||'';
-if (!$osmName)
+$dbName = shift||'';
+if (!$dbName)
 {
 	die (print $usage, "\n");
 }
@@ -142,13 +138,12 @@ if (!$htmlName)
 	die (print $usage, "\n");
 }
 
-$gpxName = shift||'';
-if (!$gpxName)
+$txtName = shift||'';
+if (!$txtName)
 {
 	die (print $usage, "\n");
 }
 
-print "\n$program $version for file $osmName\n\n" ;
 
 
 
@@ -194,7 +189,7 @@ foreach (@against) { print $_, " " ;} print "\n\n" ;
 #  Connect to DB
 ######################
 
-my @parametri = ('./db/andorra.sqlite', '', '');
+my @parametri = ($dbName, '', '');
 dbConnect @parametri;
 
 
@@ -202,29 +197,33 @@ dbConnect @parametri;
 # identify check/against ways
 #############################
 print "pass1: identify check ways...\n" ;
-#rewrite the following command
-#($wayId, $wayUser, $aRef1, $aRef2) = getWay () ;
-($wayId, $wayUser, $aRef1, $aRef2) = getWay_in_DB () ;
 
-if ($wayId != -1) {
-	@wayNodes = @$aRef1 ;
-	@wayTags = @$aRef2 ;
-}
-while ($wayId != -1) {	
-	$wayCount++ ;
-	if (scalar (@wayNodes) >= 2) {
+my null;
 
-		my $found = 0 ;
+foreach $tag (@check) {
+        my @tmp = split(/:/, $tag);
+
+        print "Check -> Cerco vie con tag @tmp\n";
+
+        loopInitWays($tmp[0], $tmp[1]);
+
+	 while ( $wayId = loopGetNextWay ) {
+                ($null, $aRef1, $aRef2) = getDBWay($wayId);
+                @wayNodes = @$aRef1 ; #nodes are ordered 0,1,2, etc
+                @wayTags = @$aRef2 ;
+
+                $wayCount++ ;
+
+		if (scalar (@wayNodes) >= 2) {
+
 		my $round = 0 ;
 		foreach $tag1 (@wayTags) {
-			if ($tag1 eq "junction:roundabout") { $round = 1 ; }
-			foreach $tag2 (@check) {
-				if ($tag1 eq $tag2) { $found = 1 ; }
+			if ($tag1->[0] eq "junction" && $tag1->[1] eq "roundabout") { $round = 1 ; }
+			if ($tag1->[0] eq "highway" && $tag1->[1] eq "construction") { $construction{$wayId} = 1 ; } 
+			if ($tag1->[0] eq "construction") { $construction{$wayId} = 1 ; } 
 			}
-			if ($tag1 eq "highway:construction") { $construction{$wayId} = 1 ; } 
-			if ($tag1 eq "construction:yes") { $construction{$wayId} = 1 ; } 
 		}
-		if (($found) and ($round == 0)) { 
+		if ($round == 0) { 
 			push @cat1, $wayId ; 
 			$checkWayCount++ ; 
 			$wayStart{$wayId} = $wayNodes[0] ; 
@@ -235,7 +234,6 @@ while ($wayId != -1) {
 			$nodeNumber{$wayId} = scalar @wayNodes ;
 		}
 
-		$found = 0 ;
 		foreach $tag1 (@wayTags) {
 			foreach $tag2 (@against) {
 				if ($tag1 eq $tag2) { $found = 1 ; }
@@ -260,7 +258,6 @@ while ($wayId != -1) {
 	}
 }
 
-closeOsmFile () ;
 
 print "number total ways: $wayCount\n" ;
 print "number invalid ways (1 node only): $invalidWays\n" ;
@@ -452,11 +449,9 @@ $time1 = time () ;
 print "\nwrite HTML tables and GPX file...\n" ;
 
 open ($html, ">", $htmlName) || die ("Can't open html output file") ;
-open ($gpx, ">", $gpxName) || die ("Can't open gpx output file") ;
 
 
 printHTMLiFrameHeader ($html, "Connection Check by Gary68") ;
-printGPXHeader ($gpx) ;
 
 print $html "<H1>Connection Check by Gary68</H1>\n" ;
 print $html "<p>Version ", $version, "</p>\n" ;
@@ -529,22 +524,13 @@ foreach $wayId (@cat1) {
 				print $html "<td>", $status , "</td>\n" ;
 		
 				print $html "<td>start ", osmLink ($lon{$wayStart{$wayId}}, $lat{$wayStart{$wayId}}, 16) , "<br>\n" ;
-				print $html "start ", osbLink ($lon{$wayStart{$wayId}}, $lat{$wayStart{$wayId}}, 16) , "</td>\n" ;
 				print $html "<td>start ", josmLink ($lon{$wayStart{$wayId}}, $lat{$wayStart{$wayId}}, 0.01, $wayId), "</td>\n" ;
 		
 				print $html "<td>end ", osmLink ($lon{$wayEnd{$wayId}}, $lat{$wayEnd{$wayId}}, 16) , "<br>\n" ;
-				print $html "end ", osbLink ($lon{$wayEnd{$wayId}}, $lat{$wayEnd{$wayId}}, 16) , "</td>\n" ;
 				print $html "<td>end ", josmLink ($lon{$wayEnd{$wayId}}, $lat{$wayEnd{$wayId}}, 0.01, $wayId), "</td>\n" ;
 		
-				print $html "<td>", picLinkOsmarender ($lon{$wayStart{$wayId}}, $lat{$wayStart{$wayId}}, 16), "</td>\n" ;
-				print $html "<td>", picLinkOsmarender ($lon{$wayEnd{$wayId}}, $lat{$wayEnd{$wayId}}, 16), "</td>\n" ;
 				print $html "</tr>\n" ;
 		
-				# GPX
-				if (($wayStat{$wayId} == 1) or ($wayStat{$wayId} == 3) ) { 
-					my ($text) = "ChkCon - " . $defName . " - way start unconnected" ;
-					printGPXWaypoint ($gpx, $lon{$wayStart{$wayId}}, $lat{$wayStart{$wayId}}, $text) ;
-				} 
 				if (($wayStat{$wayId} == 2) or ($wayStat{$wayId} == 3) ) { 
 					my ($text) = "ChkCon - " . $defName . " - way end unconnected" ;
 					printGPXWaypoint ($gpx, $lon{$wayEnd{$wayId}}, $lat{$wayEnd{$wayId}}, $text) ;
@@ -566,47 +552,11 @@ print $html "<p>$APIerrors API errors</p>" ;
 print $html "<p>$APIrejections API rejections</p>" ;
 print $html "<p>", stringTimeSpent ($time1-$time0), "</p>\n" ;
 printHTMLFoot ($html) ;
-printGPXFoot ($gpx) ;
 
 close ($html) ;
-close ($gpx) ;
 
-statistics ( ctime(stat($osmName)->mtime),  $program,  $defName, $osmName,  $checkWayCount,  $i) ;
 
-print "\n$APIcount API calls\n" ;
-print "$APIerrors API errors\n" ;
-print "$APIrejections API rejections\n" ;
 print "\n$program finished after ", stringTimeSpent ($time1-$time0), "\n\n" ;
 
 
-sub statistics {
-	my ($date, $program, $def, $area, $total, $errors) = @_ ;
-	my $statfile ; my ($statfileName) = "statistics.csv" ;
-
-	if (grep /\.bz2/, $area) { $area =~ s/\.bz2// ; }
-	if (grep /\.osm/, $area) { $area =~ s/\.osm// ; }
-	my ($area2) = ($area =~ /.+\/([\w\-]+)$/ ) ;
-
-	if (grep /\.xml/, $def) { $def =~ s/\.xml// ; }
-	my ($def2) = ($def =~ /([\w\d\_]+)$/ ) ;
-
-	my ($success) = open ($statfile, "<", $statfileName) ;
-
-	if ($success) {
-		print "statfile found. writing stats...\n" ;
-		close $statfile ;
-		open $statfile, ">>", $statfileName ;
-		printf $statfile "%02d.%02d.%4d;", localtime->mday(), localtime->mon()+1, localtime->year() + 1900 ;
-		printf $statfile "%02d/%02d/%4d;", localtime->mon()+1, localtime->mday(), localtime->year() + 1900 ;
-		print $statfile $date, ";" ;
-		print $statfile $program, ";" ;
-		print $statfile $def2, ";" ;
-		print $statfile $area2, ";" ;
-		print $statfile $total, ";" ;
-		print $statfile $errors ;
-		print $statfile "\n" ;
-		close $statfile ;
-	}
-	return ;
-}
 
