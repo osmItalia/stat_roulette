@@ -358,7 +358,7 @@ sub getDBWayNodesCoords {
 	my %lon = () ;
 	my %lat = () ;
 
-	my $sth = $dbh->prepare("SELECT nodes.id,lon,lat FROM waynodes, nodes WHERE waynodes.id=$wayId AND waynodes.nodeid=nodes.id ") or die "Couldn't prepare statement: " . $dbh->errstr ;
+	my $sth = $dbh->prepare("SELECT nodes.id,lon,lat FROM waynodes, nodes WHERE waynodes.id=$wayId AND waynodes.nodeid=nodes.id ORDER BY s ") or die "Couldn't prepare statement: " . $dbh->errstr ;
 	my @data ;
  	$sth->execute() or die "Couldn't execute statement: " . $sth->errstr ;
 	while (@data = $sth->fetchrow_array()) {
@@ -661,14 +661,20 @@ sub bulkLoad {
 	my $aRef0 ;
 	my $aRef1 ;
 	my $aRef2 ;
+	my $nameTemp ;
+	my @arrayTemp ;
+
+	@arrayTemp = split('/', $file);
+	$nameTemp = $arrayTemp[-1];
+	
 
 	OSM::osm::openOsmFile ($file) ;
 
 	print STDERR "INFO: processing nodes...\n" ;
 	print STDERR "reading nodes...\n" ;
 
-	open (my $nodesFile, ">", $tempDir . "/nodes.txt") ;
-	open (my $nodetagsFile, ">", $tempDir . "/nodetags.txt") ;
+	open (my $nodesFile, ">", $tempDir . "/$nameTemp-nodes.txt") ;
+	open (my $nodetagsFile, ">", $tempDir . "/$nameTemp-nodetags.txt") ;
 
 	($aRef0, $aRef1) = OSM::osm::getNode3 () ;
 	if (defined $aRef0) {
@@ -705,22 +711,22 @@ sub bulkLoad {
 	initTableNodes() ;
 	print STDERR "load nodes data...\n" ;
 #	$dbh->do("LOAD DATA LOCAL INFILE '$tempDir/nodes.txt' INTO TABLE nodes") ;
-	`echo '.mode tabs ' > $tempDir/cmd ` ;
-	`echo '.separator "\t"'  >> $tempDir/cmd ` ;
-	`echo ".import $tempDir/nodes.txt nodes"  >> $tempDir/cmd ` ;
-	`sqlite3 $dbName '.read $tempDir/cmd '` ;
+	`echo '.mode tabs ' > $tempDir/$nameTemp-cmd ` ;
+	`echo '.separator "\t"'  >> $tempDir/$nameTemp-cmd ` ;
+	`echo ".import $tempDir/$nameTemp-nodes.txt nodes"  >> $tempDir/$nameTemp-cmd ` ;
+	`sqlite3 $dbName '.read $tempDir/$nameTemp-cmd '` ;
 	
 #	$dbh->do("LOAD DATA LOCAL INFILE '$tempDir/nodetags.txt' INTO TABLE nodetags") ;
-	`echo '.mode tabs ' > $tempDir/cmd ` ;
-	`echo '.separator "\t"'  >> $tempDir/cmd ` ;
-	`echo ".import $tempDir/nodetags.txt nodetags"  >> $tempDir/cmd ` ;
-	`sqlite3 $dbName '.read $tempDir/cmd '` ;
+	`echo '.mode tabs ' > $tempDir/$nameTemp-cmd ` ;
+	`echo '.separator "\t"'  >> $tempDir/$nameTemp-cmd ` ;
+	`echo ".import $tempDir/$nameTemp-nodetags.txt nodetags"  >> $tempDir/$nameTemp-cmd ` ;
+	`sqlite3 $dbName '.read $tempDir/$nameTemp-cmd '` ;
 
 	dbDisconnect ($dbName) ;
 
-	`rm $tempDir/cmd ` ;
-	`rm $tempDir/nodes.txt` ;
-	`rm $tempDir/nodetags.txt` ;
+	`rm $tempDir/$nameTemp-cmd ` ;
+	`rm $tempDir/$nameTemp-nodes.txt` ;
+	`rm $tempDir/$nameTemp-nodetags.txt` ;
 
 	print STDERR "INFO: $nodeCount nodes processed.\n" ;
 
@@ -729,9 +735,9 @@ sub bulkLoad {
 	print STDERR "INFO: processing ways...\n" ;
 	print STDERR "reading ways...\n" ;
 
-	open (my $waysFile, ">", $tempDir . "/ways.txt") ;
-	open (my $waytagsFile, ">", $tempDir . "/waytags.txt") ;
-	open (my $waynodesFile, ">", $tempDir . "/waynodes.txt") ;
+	open (my $waysFile, ">", $tempDir . "/$nameTemp-ways.txt") ;
+	open (my $waytagsFile, ">", $tempDir . "/$nameTemp-waytags.txt") ;
+	open (my $waynodesFile, ">", $tempDir . "/$nameTemp-waynodes.txt") ;
 
 	($aRef0, $aRef1, $aRef2) = OSM::osm::getWay3 () ;
 	if (defined $aRef0) {
@@ -777,29 +783,29 @@ sub bulkLoad {
 	initTableWays() ;
 	print STDERR "load ways data...\n" ;
 	#$dbh->do("LOAD DATA LOCAL INFILE '$tempDir/ways.txt' INTO TABLE ways") ;
-	`echo '.mode tabs ' > $tempDir/cmd ` ;
-	`echo '.separator "\t"'  >> $tempDir/cmd ` ;
-	`echo ".import $tempDir/ways.txt ways"  >> $tempDir/cmd ` ;
-	`sqlite3 $dbName '.read $tempDir/cmd '` ;
+	`echo '.mode tabs ' > $tempDir/$nameTemp-cmd ` ;
+	`echo '.separator "\t"'  >> $tempDir/$nameTemp-cmd ` ;
+	`echo ".import $tempDir/$nameTemp-ways.txt ways"  >> $tempDir/$nameTemp-cmd ` ;
+	`sqlite3 $dbName '.read $tempDir/$nameTemp-cmd '` ;
 
 	print STDERR "load waytags data...\n" ;
 	#$dbh->do("LOAD DATA LOCAL INFILE '$tempDir/waytags.txt' INTO TABLE waytags") ;
-	`echo '.mode tabs ' > $tempDir/cmd ` ;
-	`echo '.separator "\t"'  >> $tempDir/cmd ` ;
-	`echo ".import $tempDir/waytags.txt waytags"  >> $tempDir/cmd ` ;
-	`sqlite3 $dbName '.read $tempDir/cmd '` ;
+	`echo '.mode tabs ' > $tempDir/$nameTemp-cmd ` ;
+	`echo '.separator "\t"'  >> $tempDir/$nameTemp-cmd ` ;
+	`echo ".import $tempDir/$nameTemp-waytags.txt waytags"  >> $tempDir/$nameTemp-cmd ` ;
+	`sqlite3 $dbName '.read $tempDir/$nameTemp-cmd '` ;
 	
 	print STDERR "load waynodes data...\n" ;
 	#$dbh->do("LOAD DATA LOCAL INFILE '$tempDir/waynodes.txt' INTO TABLE waynodes") ;
-	`echo '.mode tabs ' > $tempDir/cmd ` ;
-	`echo '.separator "\t"'  >> $tempDir/cmd ` ;
-	`echo ".import $tempDir/waynodes.txt waynodes"  >> $tempDir/cmd ` ;
-	`sqlite3 $dbName '.read $tempDir/cmd '` ;
+	`echo '.mode tabs ' > $tempDir/$nameTemp-cmd ` ;
+	`echo '.separator "\t"'  >> $tempDir/$nameTemp-cmd ` ;
+	`echo ".import $tempDir/$nameTemp-waynodes.txt waynodes"  >> $tempDir/$nameTemp-cmd ` ;
+	`sqlite3 $dbName '.read $tempDir/$nameTemp-cmd '` ;
 	dbDisconnect ($dbName) ;
 
-	`rm $tempDir/ways.txt` ;
-	`rm $tempDir/waytags.txt` ;
-	`rm $tempDir/waynodes.txt` ;
+	`rm $tempDir/$nameTemp-ways.txt` ;
+	`rm $tempDir/$nameTemp-waytags.txt` ;
+	`rm $tempDir/$nameTemp-waynodes.txt` ;
 
 	print STDERR "INFO: $wayCount ways processed.\n" ;
 
@@ -808,9 +814,9 @@ sub bulkLoad {
 	print STDERR "INFO: processing relations...\n" ;
 	print STDERR "reading relations...\n" ;
 
-	open (my $relationsFile, ">", $tempDir . "/relations.txt") ;
-	open (my $relationtagsFile, ">", $tempDir . "/relationtags.txt") ;
-	open (my $relationmembersFile, ">", $tempDir . "/relationmembers.txt") ;
+	open (my $relationsFile, ">", $tempDir . "/$nameTemp-relations.txt") ;
+	open (my $relationtagsFile, ">", $tempDir . "/$nameTemp-relationtags.txt") ;
+	open (my $relationmembersFile, ">", $tempDir . "/$nameTemp-relationmembers.txt") ;
 
 	($aRef0, $aRef1, $aRef2) = OSM::osm::getRelation3 () ;
 	if (defined $aRef0) {
@@ -859,31 +865,31 @@ sub bulkLoad {
 	initTableRelations() ;
 	print STDERR "load relations data...\n" ;
 	#$dbh->do("LOAD DATA LOCAL INFILE '$tempDir/relations.txt' INTO TABLE relations") ;
-	`echo '.mode tabs ' > $tempDir/cmd ` ;
-	`echo '.separator "\t"'  >> $tempDir/cmd ` ;
-	`echo ".import $tempDir/relations.txt relations"  >> $tempDir/cmd ` ;
-	`sqlite3 $dbName '.read $tempDir/cmd '` ;
+	`echo '.mode tabs ' > $tempDir/$nameTemp-cmd ` ;
+	`echo '.separator "\t"'  >> $tempDir/$nameTemp-cmd ` ;
+	`echo ".import $tempDir/$nameTemp-relations.txt relations"  >> $tempDir/$nameTemp-cmd ` ;
+	`sqlite3 $dbName '.read $tempDir/$nameTemp-cmd '` ;
 
 	print STDERR "load relationtags data...\n" ;
 	#$dbh->do("LOAD DATA LOCAL INFILE '$tempDir/relationtags.txt' INTO TABLE relationtags") ;
-	`echo '.mode tabs ' > $tempDir/cmd ` ;
-	`echo '.separator "\t"'  >> $tempDir/cmd ` ;
-	`echo ".import $tempDir/relationtags.txt relationtags"  >> $tempDir/cmd ` ;
-	`sqlite3 $dbName '.read $tempDir/cmd '` ;
+	`echo '.mode tabs ' > $tempDir/$nameTemp-cmd ` ;
+	`echo '.separator "\t"'  >> $tempDir/$nameTemp-cmd ` ;
+	`echo ".import $tempDir/$nameTemp-relationtags.txt relationtags"  >> $tempDir/$nameTemp-cmd ` ;
+	`sqlite3 $dbName '.read $tempDir/$nameTemp-cmd '` ;
 
 	print STDERR "load relationmembers data...\n" ;
 	#$dbh->do("LOAD DATA LOCAL INFILE '$tempDir/relationmembers.txt' INTO TABLE relationmembers") ;
-	`echo '.mode tabs ' > $tempDir/cmd ` ;
-	`echo '.separator "\t"'  >> $tempDir/cmd ` ;
-	`echo ".import $tempDir/relationmembers.txt relationmembers"  >> $tempDir/cmd ` ;
-	`sqlite3 $dbName '.read $tempDir/cmd '` ;
+	`echo '.mode tabs ' > $tempDir/$nameTemp-cmd ` ;
+	`echo '.separator "\t"'  >> $tempDir/$nameTemp-cmd ` ;
+	`echo ".import $tempDir/$nameTemp-relationmembers.txt relationmembers"  >> $tempDir/$nameTemp-cmd ` ;
+	`sqlite3 $dbName '.read $tempDir/$nameTemp-cmd '` ;
 
 	dbDisconnect ($dbName) ;
 
-	`rm $tempDir/cmd` ;
-	`rm $tempDir/relations.txt` ;
-	`rm $tempDir/relationtags.txt` ;
-	`rm $tempDir/relationmembers.txt` ;
+	`rm $tempDir/$nameTemp-cmd` ;
+	`rm $tempDir/$nameTemp-relations.txt` ;
+	`rm $tempDir/$nameTemp-relationtags.txt` ;
+	`rm $tempDir/$nameTemp-relationmembers.txt` ;
 
 	print STDERR "INFO: $relationCount relations processed.\n" ;
 
@@ -891,4 +897,4 @@ sub bulkLoad {
 
 }
 
-1 ;
+1 ;

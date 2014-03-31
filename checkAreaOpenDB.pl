@@ -45,30 +45,6 @@ my @areas = qw (area:yes building:* landuse:*  waterway:riverbank leisure:park l
 	amenity:hospital amenity:parking amenity:school amenity:university 
 	natural:glacier natural:wood natural:water natural:scree natural:scrub natural:fell natural:heath natural:marsh natural:wetland);
 
-#my @areas = qw (area:yes waterway:riverbank aeroway:terminal aeroway:apron building:* leisure:park leisure:playground 
-#	amenity:bus_station amenity:college 
-#	amenity:ferry_terminal amenity:hospital amenity:parking amenity:school amenity:university tourism:zoo tourism:museum
-#	landuse:forest landuse:residential landuse:industrial landuse:cemetery natural:glacier natural:wood natural:water ) ;
-
-#my @areas = qw (area:yes waterway:riverbank waterway:dock railway:turntable landuse:railway aeroway:terminal aeroway:apron 
-#	aerialway:station power:station power:sub_station man_made:reservoir_covered man_made:surveillance 
-#	man_made:wastewater_plant man_made:watermill man_made:water_works building:yes 
-#	leisure:golf_course leisure:sports_center leisure:stadium leisure:track leisure:pitch leisure:water_park leisure:marina
-#	leisure:fishing leisure:nature_reserve leisure:park leisure:playground leisure:garden leisure:common 
-#	amenity:bicycle_parking amenity:bus_station amenity:car_rental amenity:car_sharing amenity:college 
-#	amenity:ferry_terminal amenity:fountain amenity:hospital amenity:kindergarten amenity:parking amenity:place_of_worship
-#	amenity:public_building amenity:school amenity:taxi amenity:townhall amenity:university amenity:verterinary
-#	shop:kiosk shop:supermarket tourism:chalet tourism:camp_site tourism:caravan_site tourism:picnic_site tourism:theme_park
-#	tourism:attraction tourism:zoo tourism:museum historic:archeological_site historic:ruins historic:battlefield historic:wreck
-#	landuse:farm landuse:farm_yard landuse:quarry landuse:landfill landuse:basin landuse:reservoir landuse:forest
-#	landuse:allotments landuse:residential landuse:retail landuse:commercial landuse:industrial landuse:brownfield landuse:greenfield
-#	landuse:railway landuse:construction landuse:military landuse:cemetery landuse:meadow landuse:village_green 
-#	landuse:recreation_ground military:airfield military:barracks military:danger_area military:range military:naval_base
-#	natural:glacier natural:scree natural:scrub natural:fell natural:heath natural:wood natural:marsh natural:wetland
-#	natural:water natural:mud natural:beach natural:bay natural:land natural:cave_entrance 
-#	boundary:administrative boundary:civil boundary:political boundary:national_park
-#	place:region place:county place:city place:town place:village place:hamlet place:suburb place:locality place:island) ;
-
 
 my $program = "checkAreaOpenDB.pl" ;
 my $version = "3.2" ;
@@ -233,12 +209,12 @@ foreach $tag2 (@areas) {
 			@{$openWayTags{$wayId}} = @wayTags ;
 			@{$openWayNodes{$wayId}} = @wayNodes ;
 
-			# I need only one node of the way
+			# obtaining coordinates of all nodes
 			($aRef3, $aRef4) = getDBWayNodesCoords($wayId);
-			$nodeId = $wayNodes[0];
-                        $lon{$nodeId} = $aRef3->{$nodeId};
-                        $lat{$nodeId} = $aRef4->{$nodeId};
-
+			foreach $nodeId (  @wayNodes ) {
+                        	$lon{$nodeId} = $aRef3->{$nodeId};
+                       		$lat{$nodeId} = $aRef4->{$nodeId};
+				}
 			}
 		}
 	}
@@ -285,7 +261,6 @@ print $html "<th>Line</th>\n" ;
 print $html "<th>WayId</th>\n" ;
 print $html "<th>Tags</th>\n" ;
 print $html "<th>Nodes</th>\n" ;
-#print $html "<th>Distance start/end</th>\n" ;
 print $html "<th>start node id</th>\n" ;
 print $html "<th>OSM</th>\n" ;
 print $html "<th>JOSM</th>\n" ;
@@ -307,9 +282,6 @@ foreach $wayId (@open) {
 	print $html "<td>" ;
 	foreach (@{$openWayNodes{$wayId}}) { print $html $_, " - " ; }
 	print $html "</td>\n" ;
-
-	#my $dist = distance ($lon{$wayStart{$wayId}},$lat{$wayStart{$wayId}},$lon{$wayEnd{$wayId}},$lat{$wayEnd{$wayId}}) * 1000 ;
-	#printf $html "<td>%.0f m</td>\n", $dist ;
 
 	print $html "<td>", $wayStart{$wayId}, "</td>\n" ;
 	print $html "<td>", osmLink ($lon{$wayStart{$wayId}}, $lat{$wayStart{$wayId}}, 16) , "</td>\n" ;
@@ -338,12 +310,17 @@ close ($html) ;
 
 open ($txt, ">", $txtName) || die ("Can't open txt output file") ;
 foreach $wayId (@open) {
-        print $txt "ARE_$wayId\n";
+	my $outputString = "";
+        $outputString = "ARE_$wayId ";
+	foreach (@{$openWayNodes{$wayId}}) { 
+		$outputString .= "[".$lat{$_}. ",".$lon{$_}."],"; 
+		}
+	#tolgo ultima virgola
+	chop($outputString);
+	print $txt "$outputString\n";
         }
 
 close ($txt) ;
-
-
 
 
 print "\nINFO: finished after ", stringTimeSpent ($time1-$time0), "\n\n" ;
