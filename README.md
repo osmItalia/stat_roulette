@@ -24,27 +24,33 @@ Per funzionare gli script hanno bisogno del linguaggio perl.
 In aggiunta sono stati installati i seguenti oggetti
 
 
-
 tramite apt-get :
 
 - libdbd-sqlite3-perl
-- sqlite 3
+- sqlite3
 
+`sudo apt-get install libdbd-sqlite3-perl sqlite3`
 
 
 tramite CPAN:
 
 - modulo Array::Utils
-- modulo Compress::Bzip2
+- modulo Compress::Bzip2 (o Compress::Raw::Bzip2)
 
+
+Compress::Bzip2 è installabile anche con apt-get:
+`sudo apt-get install libcompress-bzip2-perl`
 
 Tramite copia a mano:
 
 - in /usr/lib/perl5 va creata la directory OSM per contenere
    le librerie perl osm ; 
-il contenuto della sottodirectory lib_OSM va copiato li'
+il contenuto della sottodirectory lib_OSM va copiato lì
 
 
+Moduli python:
+- geojson
+sono installabili con `easy_install` o `pip`
 
 
 ### LE SOTTODIRECTORY ###
@@ -59,7 +65,9 @@ I file sono scaricati in formato .osm o .osm.bz2
 
 Si genera il database SQLite col comando:
 
-> perl bulkDB.pl [file.osm | file.osm.bz2] database.sqlite
+```bash
+perl bulkDB.pl [file.osm | file.osm.bz2] database.sqlite
+```
 
 Si lanciano i vari controlli in perl su database.sqlite
 
