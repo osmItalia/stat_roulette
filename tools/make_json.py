@@ -14,16 +14,16 @@ def get_data_from_line(line):
 
 
 def make_json(input_file, instruction, output_file):
-    task = {}
-    task['instruction'] = instruction
-    task['geometries'] = {
-        'type': 'FeatureCollection',
-        'features': []
-    }
-
+    tasks = []
     with open(input_file, 'r') as infile:
-        feature = {}
         for line in infile:
+            task = {}
+            task['instruction'] = instruction
+            task['geometries'] = {
+                'type': 'FeatureCollection',
+                'features': []
+            }
+
             osm_id, coords = get_data_from_line(line)
             geometry = geojson.LineString(coords)
 
@@ -34,9 +34,10 @@ def make_json(input_file, instruction, output_file):
             }
 
             task['geometries']['features'].append(feature)
+            tasks.append(task)
 
     with open(output_file, 'w+') as outfile:
-        json.dump(task, outfile)
+        json.dump(tasks, outfile)
 
 if __name__ == '__main__':
     import argparse
