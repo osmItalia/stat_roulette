@@ -299,7 +299,15 @@ sub loopInitRelations {
 	my $and = "" ;
 
 	if (defined $k) { $kq = " k = '$k'" ; }
-	if (defined $v) { $vq = " v = '$v'" ; }
+	if (defined $v) {
+		#if value = * modify the statement
+		if ($v eq '*') {
+			$vq = " v is not null" ; 
+			}
+		else {
+			$vq = " v = '$v'" ; 
+			}
+		}
 
 	if ( (defined $k) and (defined $v) ) {
 		$and = " AND " ;
