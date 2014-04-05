@@ -313,7 +313,9 @@ foreach $wayId (@open) {
 	my $outputString = "";
         $outputString = "ARE_$wayId ";
 	foreach (@{$openWayNodes{$wayId}}) { 
-		$outputString .= "[".$lat{$_}. ",".$lon{$_}."],"; 
+		if ($lon{$_} && $lat{$_} ) {
+			$outputString .= "[".$lon{$_}. ",".$lat{$_}."],"; 
+			}
 		}
 	#tolgo ultima virgola
 	chop($outputString);

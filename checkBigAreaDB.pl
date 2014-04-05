@@ -182,7 +182,7 @@ foreach $tag2 (@areas) {
               		        $lon{$id_j} = $aRef3->{$id_j};
                		        $lat{$id_j} = $aRef4->{$id_j};
 				# alcuni nodi non hanno coordinate
-				# se li trovo, saltoil computo e azzero
+				# se li trovo, salto il computo e azzero
 				if ( $lon{$id_i} &&  $lat{$id_i} && $lon{$id_j} &&  $lat{$id_j}) {
 					$area = $area + haversine ($lat{$id_i},  $lon{$id_i}, $lat{$id_j},  $lon{$id_i}) *  haversine ( $lat{$id_i}, $lon{$id_i},  $lat{$id_i}, $lon{$id_j}) ;
 					}
@@ -193,9 +193,10 @@ foreach $tag2 (@areas) {
 			$area = $area / 2;
 
 			if ($area > $maxDimension) {
-print "Big Area: " . floor($area) ." mq\n";
+#print "Big Area: " . floor($area) ." mq\n";
 				push @bigger, $wayId;
 				@{$biggerWayTags{$wayId}} = @wayTags ;
+				@{$biggerWayNodes{$wayId}} = @wayNodes ;
 				$wayStart{$wayId} = $wayNodes[0];
 				$biggerAreaCount ++ ;
 				$areaDim{$wayId} = floor($area);

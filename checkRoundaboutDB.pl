@@ -347,11 +347,9 @@ close ($html) ;
 ##############
 
 open ($txt, ">", $txtName) || die ("Can't open txt output file") ;
-print "\n----- ROUNDABOUTS ----------\n";
 foreach $wayId (@wrong_round) {
 	print $txt "ROU_$wayId\n";
 	}
-print "\n----- TOO SMALL ROUNDABOUTS ----------\n";
 foreach $wayId (@small_roundabouts) {
 	print $txt "ROU_$wayId\n";
 	}
