@@ -13,9 +13,9 @@ I file originali in perl di Gary68 disponibili in [questa pagina](http://wiki.op
 
 Sabas ha contribuito con correzioni e la funzione di Haversine.
 
-Christian ha realizzato tutti gli script in Python e molte funzioni aggiuntive.
+Cristian ha realizzato tutti gli script in Python e molte funzioni aggiuntive.
 
-Tutti gli errori di programmazione sono i miei o di Christian!
+Tutti gli errori di programmazione sono i miei o di Cristian! Se ne trovate, per favore, segnalateli aprendo una [issue](https://github.com/osmItalia/stat_roulette/issues).
 
 
 
